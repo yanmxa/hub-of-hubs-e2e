@@ -1,0 +1,12 @@
+# Directories
+.go
+.vscode
+/build/_output
+/cmd/manager/__debug_bin
+vendor
+/.DS_Store
+/.project
+/vendor
+.idea
+
+Dockerfile.tmp
