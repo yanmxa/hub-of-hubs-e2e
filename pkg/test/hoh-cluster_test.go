@@ -21,7 +21,7 @@ const (
 	CLUSTER_LABEL_VALUE = "test"
 )
 
-var _ = Describe("label", Ordered, Focus, func() {
+var _ = Describe("label", Ordered, func() {
 	var token string
 	var httpClient *http.Client
 	var managedClusterName string
