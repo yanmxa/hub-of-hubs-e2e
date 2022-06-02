@@ -12,3 +12,11 @@ vendor
 Dockerfile.tmp
 
 .vscode
+
+
+resources/options.yaml
+resources/env.list
+resources/kubeconfig
+resources/result
+
+

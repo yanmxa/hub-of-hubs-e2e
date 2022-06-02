@@ -2,37 +2,6 @@ set -e
 
 ROOTDIR="$(cd "$(dirname "$0")/.." ; pwd -P)"
 
-echo $KUBECONFIG
-if [[ -z "${KUBECONFIG}" ]]; then
-  echo "Error: environment variable KUBECONFIG must be specified!"
-  exit 1
-fi
-
-if [[ -z "${CONTEXT}" ]]; then
-  echo "Error: environment variable KUBECONFIG must be specified!"
-  exit 1
-fi
-
-if [[ -z "${IMPORTED1_KUBECONFIG}" ]]; then
-  echo "Error: environment variable IMPORTED1_KUBECONFIG must be specified!"
-  exit 1
-fi
-
-if [[ -z "${IMPORTED1_CONTEXT}" ]]; then
-  echo "Error: environment variable IMPORTED1_CONTEXT must be specified!"
-  exit 1
-fi
-
-if [[ -z "${IMPORTED2_KUBECONFIG}" ]]; then
-  echo "Error: environment variable IMPORTED2_KUBECONFIG must be specified!"
-  exit 1
-fi
-
-if [[ -z "${IMPORTED2_CONTEXT}" ]]; then
-  echo "Error: environment variable IMPORTED2_CONTEXT must be specified!"
-  exit 1
-fi
-
 # hub cluster
 hub_cluster_name="hub-of-hub-cluster"
 hub_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-hub"
@@ -45,17 +14,12 @@ hub_kubecontext=$(kubectl config current-context --kubeconfig ${hub_kubeconfig})
 hub_database_secret="hub-of-hubs-database-secret"
 hub_namespace="open-cluster-management"
 
-# leaf hub name
-leaf_hub_name="kind-hub1"
-
 # imported managedcluster1
-managed1_cluster_name="kind-hub1-cluster1"
 managed1_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-managed1"
 kubectl config view --raw --minify --kubeconfig ${IMPORTED1_KUBECONFIG} --context ${IMPORTED1_CONTEXT} > ${managed1_kubeconfig}
 managed1_kubecontext=$(kubectl config current-context --kubeconfig ${managed1_kubeconfig})
 
 # imported managedcluster2
-managed2_cluster_name="kind-hub1-cluster2"
 managed2_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-managed2"
 kubectl config view --raw --minify --kubeconfig ${IMPORTED2_KUBECONFIG} --context ${IMPORTED2_CONTEXT} > ${managed2_kubeconfig}
 managed2_kubecontext=$(kubectl config current-context --kubeconfig ${managed2_kubeconfig})
@@ -73,14 +37,35 @@ printf "\n    kubecontext: ${hub_kubecontext}" >> resources/options.yaml
 printf "\n    baseDomain: ${hub_base_domain}" >> resources/options.yaml
 printf "\n    databaseSecret: ${hub_database_secret}" >> resources/options.yaml
 printf "\n  clusters:" >> resources/options.yaml
-printf "\n    - name: ${managed1_cluster_name}" >> resources/options.yaml
+printf "\n    - name: ${IMPORTED1_NAME}" >> resources/options.yaml
+printf "\n      leafhubname: ${IMPORTED1_LEAF_HUB_NAME}" >> resources/options.yaml
 printf "\n      kubeconfig: ${managed1_kubeconfig}" >> resources/options.yaml
 printf "\n      kubecontext: ${managed1_kubecontext}" >> resources/options.yaml
-printf "\n      leafhubname: ${leaf_hub_name}" >> resources/options.yaml
-printf "\n    - name: ${managed2_cluster_name}" >> resources/options.yaml
+printf "\n    - name: ${IMPORTED2_NAME}" >> resources/options.yaml
+printf "\n      leafhubname: ${IMPORTED2_LEAF_HUB_NAME}" >> resources/options.yaml
 printf "\n      kubeconfig: ${managed2_kubeconfig}" >> resources/options.yaml
 printf "\n      kubecontext: ${managed2_kubecontext}" >> resources/options.yaml
-printf "\n      leafhubname: ${leaf_hub_name}" >> resources/options.yaml
 
 
-ginkgo ${ROOTDIR}/pkg/test -p -- -options=${ROOTDIR}/resources/options.yaml -v=5 
+while getopts ":f:v:" opt; do
+  case $opt in
+    f) filter="$OPTARG"
+    ;;
+    v) verbose="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    exit 1
+    ;;
+  esac
+
+  case $OPTARG in
+    -*) echo "Option $opt needs a valid argument"
+    exit 1
+    ;;
+  esac
+done
+
+verbose=${verbose:=5}
+
+ginkgo --label-filter="$filter" --output-dir="${ROOTDIR}/resources/result" --json-report=report.json \
+--junit-report=report.xml -trace -v  ${ROOTDIR}/pkg/test -- -options=${ROOTDIR}/resources/options.yaml -v="$verbose"

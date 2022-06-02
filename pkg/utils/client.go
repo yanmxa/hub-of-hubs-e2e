@@ -38,7 +38,6 @@ func NewTestClient(opt Options) *client {
 
 func (c *client) KubeClient() kubernetes.Interface {
 	opt := c.options
-	klog.V(6).Infof("Create kubeclient for url %s using kubeconfig path %s\n", opt.HubCluster.MasterURL, opt.HubCluster.KubeConfig)
 	config, err := LoadConfig(opt.HubCluster.KubeConfig, opt.HubCluster.KubeConfig, opt.HubCluster.KubeContext)
 	if err != nil {
 		panic(err)

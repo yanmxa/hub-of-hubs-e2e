@@ -26,7 +26,8 @@ const (
 	APP_SUB_NAMESPACE = "pacman"
 )
 
-var _ = Describe("application", Ordered, Focus, func() {
+var _ = Describe("application", Label("app"), Ordered, func() {
+
 	var token string
 	var httpClient *http.Client
 	var managedClusterName1 string

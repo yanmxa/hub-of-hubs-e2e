@@ -22,7 +22,7 @@ const (
 	POLICY_LABEL_VALUE = "test"
 )
 
-var _ = Describe("policy", Ordered, func() {
+var _ = Describe("policy", Ordered, Label("policy"), func() {
 	var token string
 	var httpClient *http.Client
 	var managedClusterName1 string
@@ -67,7 +67,9 @@ var _ = Describe("policy", Ordered, func() {
 					}
 				}
 			}
-			return fmt.Errorf("the label %s: %s is not exist", POLICY_LABEL_KEY, POLICY_LABEL_VALUE)
+			err := fmt.Errorf("the label %s: %s is not exist", POLICY_LABEL_KEY, POLICY_LABEL_VALUE)
+			klog.V(5).Info(err)
+			return err
 		}, 5*60*time.Second, 5*1*time.Second).ShouldNot(HaveOccurred())
 	})
 
@@ -82,8 +84,10 @@ var _ = Describe("policy", Ordered, func() {
 					if policyInfo.ErrorInfo == "none" && policyInfo.Compliance == "non_compliant" {
 						return nil
 					} else {
-						return fmt.Errorf("the cluster %s with policy error Information %s and compliacne %s",
+						err := fmt.Errorf("the cluster %s with [error] 'none' -> %s and [compliance] 'non_compliant' ->  %s ",
 							managedClusterName1, policyInfo.ErrorInfo, policyInfo.Compliance)
+						klog.V(5).Info(err)
+						return err
 					}
 				}
 			}
