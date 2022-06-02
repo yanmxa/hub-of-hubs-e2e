@@ -1,10 +1,15 @@
 set -e
 
-ROOTDIR="$(cd "$(dirname "$0")/.." ; pwd -P)"
+ROOT_DIR="$(cd "$(dirname "$0")/.." ; pwd -P)"
+
+KUBECONFIG_DIR="${ROOT_DIR}/resources/kubeconfig"
+if [ ! -d "$KUBECONFIG_DIR"  ];then
+  mkdir $KUBECONFIG_DIR
+fi
 
 # hub cluster
 hub_cluster_name="hub-of-hub-cluster"
-hub_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-hub"
+hub_kubeconfig="${KUBECONFIG_DIR}/kubeconfig-hub"
 kubectl config view --raw --minify --kubeconfig ${KUBECONFIG} --context ${CONTEXT} > ${hub_kubeconfig}
 
 hub_app_domain=$(kubectl -n openshift-ingress-operator get ingresscontrollers default -ojsonpath='{.status.domain}'  --kubeconfig ${KUBECONFIG} --context ${CONTEXT})
@@ -15,12 +20,12 @@ hub_database_secret="hub-of-hubs-database-secret"
 hub_namespace="open-cluster-management"
 
 # imported managedcluster1
-managed1_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-managed1"
+managed1_kubeconfig="${KUBECONFIG_DIR}/kubeconfig-managed1"
 kubectl config view --raw --minify --kubeconfig ${IMPORTED1_KUBECONFIG} --context ${IMPORTED1_CONTEXT} > ${managed1_kubeconfig}
 managed1_kubecontext=$(kubectl config current-context --kubeconfig ${managed1_kubeconfig})
 
 # imported managedcluster2
-managed2_kubeconfig="${ROOTDIR}/resources/kubeconfig/kubeconfig-managed2"
+managed2_kubeconfig="${KUBECONFIG_DIR}/kubeconfig-managed2"
 kubectl config view --raw --minify --kubeconfig ${IMPORTED2_KUBECONFIG} --context ${IMPORTED2_CONTEXT} > ${managed2_kubeconfig}
 managed2_kubecontext=$(kubectl config current-context --kubeconfig ${managed2_kubeconfig})
 
@@ -67,5 +72,5 @@ done
 
 verbose=${verbose:=5}
 
-ginkgo --label-filter="$filter" --output-dir="${ROOTDIR}/resources/result" --json-report=report.json \
---junit-report=report.xml -trace -v  ${ROOTDIR}/pkg/test -- -options=${ROOTDIR}/resources/options.yaml -v="$verbose"
+ginkgo --label-filter="$filter" --output-dir="${ROOT_DIR}/resources/result" --json-report=report.json \
+--junit-report=report.xml -trace -v  ${ROOT_DIR}/pkg/test -- -options=${ROOT_DIR}/resources/options.yaml -v="$verbose"

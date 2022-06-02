@@ -17,7 +17,6 @@ import (
 )
 
 var _ = Describe("Client", Label("connection"), func() {
-
 	It("kubeclient", func() {
 		hubClient := clients.KubeClient()
 		deployClient := hubClient.AppsV1().Deployments(testOptions.HubCluster.Namespace)
